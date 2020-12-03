@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  app:
+    image: app
+    container_name: app
+    volumes:
+      - ./dist:/usr/src/app/dist
+    build: ./
+    restart: always
+    environment:
+      DB_HOSTNAME: mysql
+    depends_on:
+      - mysql
+    links: # host名代替ip配置nginx的转发
+      - mysql
+    expose:
+      - 3000
+    command: yarn run start
+  nginx:
+    image: nginx:1.19.0-alpine
+    container_name: nginx
+    volumes:
+      - ./conf:/etc/nginx/conf.d
+    ports:
+      - 8888:80
+    restart: always
+    depends_on:
+      - app
+    links: # host名代替ip配置nginx的转发
+      - app
+    expose:
+      - 8888
+  mysql:
+    image: mysql:8.0.12
+    container_name: mysql
+    restart: always
+    ports:                          # 映射端口
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_USER=root
+    # volumes:                    # 挂载数据卷
+    #   - ./mysql:/var/lib/mysql  # 为了数据持久化
